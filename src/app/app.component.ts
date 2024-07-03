@@ -22,7 +22,9 @@ export class AppComponent {
   editing = false;
   todos = todos;
 
-  // handleTodoToggle(event: Event, todo: Todo) {
-  //   todo.completed = (event.target as HTMLInputElement).checked;
-  // }
+  get activeTodos() {
+    console.log('calc');
+
+    return this.todos.filter(todo => !todo.completed)
+  }
 }
