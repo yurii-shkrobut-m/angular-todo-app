@@ -11,9 +11,18 @@
     </header>
 
     <section class="todoapp__main">
-      <div class="todo" [class.completed]="todo.completed" *ngFor="let todo of todos">
+      <div
+        class="todo"
+        [class.completed]="todo.completed"
+        *ngFor="let todo of todos; let i = index"
+      >
         <label class="todo__status-label">
-          <input type="checkbox" class="todo__status" checked />
+          <input
+            type="checkbox"
+            class="todo__status"
+            [checked]="todo.completed"
+            (change)="handleTodoToggle($event, todo)"
+          />
         </label>
 
         <form *ngIf="editing; else titleBlock">
@@ -30,7 +39,11 @@
             {{todo.title}}
           </span>
 
-          <button type="button" class="todo__remove">
+          <button
+            type="button"
+            class="todo__remove"
+            (click)="todos.splice(i, 1)"
+          >
             ×
           </button>
         </ng-template>
