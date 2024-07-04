@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Todo } from './types/todo';
 
@@ -12,18 +12,15 @@ const todos = [
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrl: './app.component.scss',
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   todos = todos;
 
   todoForm = new FormGroup({
     title: new FormControl('', {
       nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.minLength(3),
-      ],
+      validators: [Validators.required, Validators.minLength(3)],
     }),
   });
 
@@ -32,7 +29,19 @@ export class AppComponent {
   }
 
   get activeTodos(): Todo[] {
-    return this.todos.filter(todo => !todo.completed)
+    return this.todos.filter((todo) => !todo.completed);
+  }
+
+  constructor() {}
+
+  ngOnInit(): void {
+    setTimeout(() => {
+      this.todos[1] = { ...this.todos[1], title: 'qwerty' };
+    }, 3000);
+  }
+
+  trackById(i: number, todo: Todo) {
+    return todo.id;
   }
 
   addTodo() {
@@ -44,7 +53,7 @@ export class AppComponent {
       id: Date.now(),
       title: this.title.value,
       completed: false,
-    }
+    };
 
     this.todos.push(newTodo);
     this.todoForm.reset();
