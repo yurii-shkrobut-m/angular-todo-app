@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { Todo } from './types/todo';
 
 const todos = [
   { id: 1, title: 'HTML + CSS', completed: true },
@@ -7,24 +9,44 @@ const todos = [
   { id: 4, title: 'Vue.js', completed: false },
 ];
 
-interface Todo {
-  id: number;
-  title: string,
-  completed: boolean,
-}
-
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  editing = false;
   todos = todos;
 
-  get activeTodos() {
-    console.log('calc');
+  todoForm = new FormGroup({
+    title: new FormControl('', {
+      nonNullable: true,
+      validators: [
+        Validators.required,
+        Validators.minLength(3),
+      ],
+    }),
+  });
 
+  get title() {
+    return this.todoForm.get('title') as FormControl;
+  }
+
+  get activeTodos(): Todo[] {
     return this.todos.filter(todo => !todo.completed)
+  }
+
+  addTodo() {
+    if (this.todoForm.invalid) {
+      return;
+    }
+
+    const newTodo: Todo = {
+      id: Date.now(),
+      title: this.title.value,
+      completed: false,
+    }
+
+    this.todos.push(newTodo);
+    this.todoForm.reset();
   }
 }
