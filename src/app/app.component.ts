@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Todo } from './types/todo';
 
@@ -13,8 +13,9 @@ const todos = [
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   todos = todos;
 
   todoForm = new FormGroup({
@@ -29,33 +30,57 @@ export class AppComponent implements OnInit {
   }
 
   get activeTodos(): Todo[] {
+    console.log('calculation');
+
     return this.todos.filter((todo) => !todo.completed);
   }
 
   constructor() {}
 
-  ngOnInit(): void {
-    setTimeout(() => {
-      this.todos[1] = { ...this.todos[1], title: 'qwerty' };
-    }, 3000);
-  }
-
   trackById(i: number, todo: Todo) {
     return todo.id;
   }
 
-  addTodo() {
+  handleFormSubmit() {
     if (this.todoForm.invalid) {
       return;
     }
 
+    this.addTodo(this.title.value);
+    this.todoForm.reset();
+  }
+
+  addTodo(newTitle: string) {
     const newTodo: Todo = {
       id: Date.now(),
-      title: this.title.value,
+      title: newTitle,
       completed: false,
     };
 
-    this.todos.push(newTodo);
-    this.todoForm.reset();
+    this.todos = [...this.todos, newTodo];
   }
+
+  renameTodo(todoId: number, title: string) {
+    this.todos = this.todos.map((todo) => {
+      if (todo.id !== todoId) {
+        return todo;
+      }
+
+      return { ...todo, title };
+    });
+  }
+
+  toggleTodo(todoId: number) {
+    this.todos = this.todos.map((todo) => {
+      if (todo.id !== todoId) {
+        return todo;
+      }
+
+      return { ...todo, completed: !todo.completed };
+    });
+  }
+
+  deleteTodo(todoId: number) {
+    this.todos = this.todos.filter(todo => todo.id !== todoId)
+  };
 }
