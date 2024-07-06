@@ -1,16 +1,17 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { Todo } from './types/todo';
+import { Component, OnInit } from '@angular/core';
+import { MessageService } from './services/message.service';
 import { TodosService } from './services/todos.service';
+import { Todo } from './types/todo';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
-  // changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  _todos: Todo[] = [];
+  private _todos: Todo[] = [];
   activeTodos: Todo[] = [];
+  errorMessage = '';
 
   get todos() {
     return this._todos;
@@ -22,20 +23,22 @@ export class AppComponent implements OnInit {
     }
 
     this._todos = todos;
-    this.activeTodos = this._todos.filter(todo => !todo.completed);
+    this.activeTodos = this._todos.filter((todo) => !todo.completed);
   }
 
   constructor(
     private todosService: TodosService,
+    private messageService: MessageService
   ) {}
 
   ngOnInit(): void {
-    this.todosService.getTodos()
-      .subscribe((todos) => {
-        console.log(todos);
+    this.todosService.todos$.subscribe((todos) => {
+      this.todos = todos;
+    });
 
-        this.todos = todos;
-      })
+    this.todosService.loadTodos().subscribe({
+      error: () => this.messageService.showMessage('Unable to load todos'),
+    });
   }
 
   trackById(i: number, todo: Todo) {
@@ -43,36 +46,28 @@ export class AppComponent implements OnInit {
   }
 
   addTodo(newTitle: string) {
-    const newTodo: Todo = {
-      id: Date.now(),
-      title: newTitle,
-      completed: false,
-    };
-
-    this.todos = [...this.todos, newTodo];
-  }
-
-  renameTodo(todoId: number, title: string) {
-    this.todos = this.todos.map((todo) => {
-      if (todo.id !== todoId) {
-        return todo;
-      }
-
-      return { ...todo, title };
+    this.todosService.createTodo(newTitle).subscribe({
+      error: () => this.messageService.showMessage('Unable to add a todo'),
     });
   }
 
-  toggleTodo(todoId: number) {
-    this.todos = this.todos.map((todo) => {
-      if (todo.id !== todoId) {
-        return todo;
-      }
+  toggleTodo(todo: Todo) {
+    this.todosService
+      .updateTodo({ ...todo, completed: !todo.completed })
+      .subscribe({
+        error: () => this.messageService.showMessage('Unable to toggle a todo'),
+      });
+  }
 
-      return { ...todo, completed: !todo.completed };
+  renameTodo(todo: Todo, title: string) {
+    this.todosService.updateTodo({ ...todo, title }).subscribe({
+      error: () => this.messageService.showMessage('Unable to rename a todo'),
     });
   }
 
-  deleteTodo(todoId: number) {
-    this.todos = this.todos.filter(todo => todo.id !== todoId)
-  };
+  deleteTodo(todo: Todo) {
+    this.todosService.deleteTodo(todo).subscribe({
+      error: () => this.messageService.showMessage('Unable to delete a todo'),
+    });
+  }
 }

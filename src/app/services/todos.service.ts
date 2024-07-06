@@ -1,27 +1,61 @@
-import { Injectable } from '@angular/core';
-import { Todo } from '../types/todo';
-import { HttpClient } from '@angular/common/http';
+import { Injectable } from "@angular/core";
+import { Todo } from "../types/todo";
+import { HttpClient } from "@angular/common/http";
+import { BehaviorSubject, Observable, switchMap, tap, withLatestFrom } from "rxjs";
 
-// const todosFromServer: Todo[] = [
-//   { id: 1, title: 'HTML + CSS', completed: true },
-//   { id: 2, title: 'JS', completed: false },
-//   { id: 3, title: 'React', completed: false },
-//   { id: 4, title: 'Vue.js', completed: false },
-// ];
-
-const USER_ID = '6548';
-const API_URL = 'https://mate.academy/students-api';
+const USER_ID = "6548";
+const API_URL = "https://mate.academy/students-api";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TodosService {
+  private todos$$ = new BehaviorSubject<Todo[]>([]);
 
-  constructor(
-    private http: HttpClient,
-  ) { }
+  todos$ = this.todos$$.asObservable();
 
-  getTodos() {
-    return this.http.get<Todo[]>(`${API_URL}/todos?userId=${USER_ID}`);
+  constructor(private http: HttpClient) {}
+
+  loadTodos() {
+    return this.http.get<Todo[]>(`${API_URL}/todos?userId=${USER_ID}`).pipe(
+      tap((todos) => {
+        this.todos$$.next(todos);
+      })
+    );
+  }
+
+  createTodo(title: string) {
+    return this.http
+      .post<Todo>(`${API_URL}/todos`, {
+        title,
+        userId: USER_ID,
+        completed: false,
+      })
+      .pipe(
+        withLatestFrom(this.todos$$),
+        tap(([createdTodo, todos]) => {
+          this.todos$$.next([...todos, createdTodo]);
+        })
+      );
+  }
+
+  updateTodo({ id, ...data }: Todo) {
+    return this.http.patch<Todo>(`${API_URL}/todos/${id}`, data).pipe(
+      withLatestFrom(this.todos$$),
+      tap(([updatedTodo, todos]) => {
+        this.todos$$.next(
+          todos.map((todo) => (todo.id === id ? updatedTodo : todo))
+        );
+      })
+    );
+  }
+
+  deleteTodo({ id }: Todo) {
+    return this.http.delete<Todo>(`${API_URL}/todos/${id}`).pipe(
+      withLatestFrom(this.todos$$),
+      tap(([_, todos]) => {
+        this.todos$$.next(todos.filter((todo) => todo.id !== id));
+      })
+    );
   }
 }

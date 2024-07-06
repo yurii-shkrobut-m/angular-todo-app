@@ -9,6 +9,7 @@ import { TodoComponent } from './components/todo/todo.component';
 import { TodoFormComponent } from './components/todo-form/todo-form.component';
 import { FilterActivePipe } from './pipes/filter-active.pipe';
 import { provideHttpClient } from '@angular/common/http';
+import { MessageComponent } from './components/message/message.component';
 
 @NgModule({
   declarations: [
@@ -16,6 +17,7 @@ import { provideHttpClient } from '@angular/common/http';
     TodoComponent,
     TodoFormComponent,
     FilterActivePipe,
+    MessageComponent,
   ],
   imports: [
     BrowserModule,
